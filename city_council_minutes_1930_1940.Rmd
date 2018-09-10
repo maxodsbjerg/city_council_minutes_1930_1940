@@ -1,8 +1,10 @@
 ---
-title: "city_council_minutes_1930-1940"
-author: "Max Odsbjerg Pedersen"
-date: "September 6, 2018"
-output: html_document
+title: "R Notebook"
+output: html_notebook
+---
+
+This is an [R Markdown](http://rmarkdown.rstudio.com) Notebook. When you execute code within the notebook, the results appear beneath the code. 
+
 ---
 
 ```{r setup, include=FALSE}
@@ -17,7 +19,7 @@ library(topicmodels)
 ```
 indlæs data
 ```{r}
-minutes_1930_1940 <- read_csv("/home/max/workspace/city-council-minutes/data/city-council-minutes-1930-1940.csv")
+minutes_1930_1940 <- read_csv("https://raw.githubusercontent.com/maxodsbjerg/city_council_minutes_1930_1940/master/data/city-council-minutes-1930-1940.csv")
 ```
 
 
@@ -43,7 +45,7 @@ minutes_1930_1940_tidy
 Væk med stopord og tælling: 
 
 ```{r}
-stopord <- read_csv("data/stopord")
+stopord <- read_csv("https://raw.githubusercontent.com/maxodsbjerg/city_council_minutes_1930_1940/master/data/stopord")
 #list.files()
 #getwd()
 ```
@@ -102,4 +104,5 @@ top_terms %>%
 minutes_gamma <- tidy(minutes_lda, matrix = "gamma")
 minutes_gamma
 ```
+
 
