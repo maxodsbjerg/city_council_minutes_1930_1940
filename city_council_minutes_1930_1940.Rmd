@@ -1,0 +1,105 @@
+---
+title: "city_council_minutes_1930-1940"
+author: "Max Odsbjerg Pedersen"
+date: "September 6, 2018"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r}
+library(stringr)
+library(tidyverse)
+library(tidytext)
+library(topicmodels)
+```
+indlæs data
+```{r}
+minutes_1930_1940 <- read_csv("/home/max/workspace/city-council-minutes/data/city-council-minutes-1930-1940.csv")
+```
+
+
+Navne gøres til enkelte enheder
+
+```{r}
+minutes_1930_1940 %>% 
+  mutate(text = str_replace_all(text, pattern = "([A-Z])\\. ([A-Z])\\. ([A-z-]+)", "\\1_\\2_\\3")) %>% 
+  mutate(text = str_replace_all(text, pattern = "([A-Z])\\. ([A-Z][a-z]+)", "\\1_\\2")) %>% 
+  mutate(text = str_replace_all(text, pattern = "Chr\\. ([A-z-]+)", "Chr_\\1" )) %>% 
+  mutate(text = str_replace_all(text, pattern = "Vald\\. ([A-z]+)", "Vald_\\1")) -> minutes_1930_1940
+  
+```
+
+Overgå til tidytext-format:
+
+```{r}
+minutes_1930_1940_tidy <- minutes_1930_1940 %>% 
+  unnest_tokens(word, text)
+minutes_1930_1940_tidy
+```
+
+Væk med stopord og tælling: 
+
+```{r}
+stopord <- read_csv("data/stopord")
+#list.files()
+#getwd()
+```
+
+```{r}
+minutes_1930_1940_tidy_count <- minutes_1930_1940_tidy%>%
+  anti_join(stopord) %>% 
+  count(date_of_meeting, word, sort = TRUE) %>% 
+  ungroup()
+minutes_1930_1940_tidy_count
+  
+```
+
+LDA
+
+```{r}
+minutes_dtm <- minutes_1930_1940_tidy_count %>% 
+  cast_dtm(date_of_meeting, word, n)
+
+minutes_dtm
+```
+
+```{r}
+minutes_lda <- LDA(minutes_dtm, k = 6, control = list(seed = 1234))
+
+minutes_lda
+```
+
+```{r}
+minutes_topics <- tidy(minutes_lda, matrix = "beta")
+
+minutes_topics
+```
+
+```{r}
+top_terms <- minutes_topics %>%
+  group_by(topic) %>%
+  top_n(5, beta) %>%
+  ungroup() %>%
+  arrange(topic, -beta)
+
+top_terms
+```
+
+```{r}
+top_terms %>%
+  mutate(term = reorder(term, beta)) %>%
+  ggplot(aes(term, beta, fill = factor(topic))) +
+  geom_col(show.legend = FALSE) +
+  facet_wrap(~ topic, scales = "free") +
+  coord_flip()
+```
+
+
+```{r}
+minutes_gamma <- tidy(minutes_lda, matrix = "gamma")
+minutes_gamma
+```
+
